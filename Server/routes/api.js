@@ -20,11 +20,22 @@ router.get('/', (req, res) => {
 router.post('/register', (req, res) => {
     let userData = req.body
     let user = new User(userData)
-    user.save((error, registeredUser) => {
+
+    User.findOne({email: userData.email}, (error, user) => {
         if(error) {
-            console.error(error)
+            res.status(503).send('DB service unavailable')
         } else {
-            res.status(200).send(registeredUser)
+            if(!user) {
+                user.save((error, registeredUser) => {
+                    if(error) {
+                        res.status(503).send('DB service unavailable')
+                    } else {
+                        res.status(200).send(registeredUser)
+                    }
+                })
+            } else {
+                res.status(500).send('User already registered')
+            }
         }
     })
 })
